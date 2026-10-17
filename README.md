@@ -4,11 +4,13 @@ SlotLedger is a small **room-booking application**. It lets users reserve a room
 
 I am developing it as a **QA Engineer / QA Automation Engineer portfolio project** to demonstrate how I identify risks, investigate defects and build automated tests.
 
-**Current status:** local preparation for publication. All 93 Vitest tests, ten Chromium Playwright tests and the production build passed locally on 2026-10-16. No GitHub Actions run or deployment has been verified for this repository.
+**Current status:** public repository with verified CI. All 93 Vitest tests, ten Chromium Playwright tests and the production build passed locally and in [GitHub Actions run 38887009094](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/38887009094) for commit `acd9268` on 2026-10-16. GitHub Pages deployment has not been verified.
 
-Planned repository: `https://github.com/MattZurr/slotledger-qa-automation`.
+Local follow-up on 2026-10-17: all twelve Chromium tests and the production build passed. The two added storage scenarios have not yet been verified in CI.
+
+Repository: [MattZurr/slotledger-qa-automation](https://github.com/MattZurr/slotledger-qa-automation).
 Planned demo: `https://mattzurr.github.io/slotledger-qa-automation/`.
-These are intended publication addresses, not currently verified links.
+The demo address is planned and has not been verified as live.
 
 ## What you can do
 
@@ -71,7 +73,7 @@ On Windows PowerShell, use `npm.cmd` and `npx.cmd` if arguments are not forwarde
 
 The [workflow](.github/workflows/ci-pages.yml) is configured for pushes to main, pull requests and manual runs. It uses Node.js 22 and runs npm ci, Vitest, the production build, Chromium installation and Playwright. E2E uses one worker, rejects test.only and has a five-minute limit. Tests target a local Vite development server, not the production build or hosted website.
 
-The HTML report is configured for upload after success or failure unless the run is cancelled, with seven-day retention. Failed-test traces are retained when produced. After downloading and extracting a report, open it with `npm run test:e2e:report -- <directory>`. Actual report upload and failure behavior remain to be verified in this repository.
+The HTML report is configured for upload after success or failure unless the run is cancelled, with seven-day retention. Failed-test traces are retained when produced. After downloading and extracting a report, open it with `npm run test:e2e:report -- <directory>`. Successful upload was verified in run 38887009094; upload after failure remains unexercised.
 
 Tests and build run independently of deployment. Pages artifact upload and deployment require the repository Actions variable `PAGES_ENABLED` to equal `true`, a main push or manual main run, and successful verification. An unset variable leaves deployment disabled. PRs do not deploy. Enable the variable only after publication approval and configuring Pages to use GitHub Actions; GitHub Free requires a public repository for Pages.
 
@@ -91,18 +93,22 @@ The application also validates real calendar dates, booking permissions and data
 | Loaded data must satisfy the application's format and identity assumptions | Corrupted state or missed collisions | [Vitest storage tests](src/storage/bookingStorage.test.ts): structural/semantic rejection, positive safe integer IDs and duplicate booking IDs |
 | Invalid stored data must be preserved and access failures reported | Silent data loss or unreported persistence failure | [Vitest storage tests](src/storage/bookingStorage.test.ts): malformed JSON, no write/delete/clear on validation failure, read/write exceptions and JSON serialization |
 
-The ten [Chromium scenarios](e2e/booking.spec.ts) cover creation and persistence, overlap rejection, reversed/equal times, correction after invalid time, touching boundaries, independent rooms/dates, malformed stored JSON and a simulated write failure. The storage cases check error messages and preservation of existing data; they do not simulate real quota exhaustion or all invalid-data cases.
+The twelve [Chromium scenarios](e2e/booking.spec.ts) cover creation and persistence, overlap rejection, reversed/equal times, correction after invalid time, touching boundaries, independent rooms/dates, malformed stored JSON, an impossible stored date, and simulated read/write failures. Invalid-data cases check blocked creation and unchanged raw storage; the write-failure case checks preservation of the original booking. These tests do not simulate real quota exhaustion or all invalid-data cases.
 
 ### Verification status
 
 Local verification on 2026-10-16 used Windows and Node.js 22.14.0, after npm ci. Playwright used the CI worker/forbid-only/timeout options against the local development server.
 
+On 2026-10-17, all twelve Chromium tests passed on port 4174 with the same runner options, and the production build passed. Vitest was not repeated because application code, unit tests and dependencies were unchanged; its local evidence remains from 2026-10-16.
+
+CI evidence: [push-triggered run 38887009094](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/38887009094) for commit `acd9268`, on 2026-10-16. Job logs confirm npm ci, 93/93 Vitest, the production build, Chromium installation and 10/10 Playwright tests on Ubuntu with Node.js 22.23.3. The `playwright-report` artifact was uploaded successfully. Pages artifact upload and deployment were skipped.
+
 | Check | Evidence for this directory |
 | --- | --- |
 | Local Vitest | **93/93 passed**, two files |
-| Local Playwright | **10/10 passed**, Chromium, port 4174, one worker |
+| Local Playwright | **12/12 passed** on 2026-10-17, Chromium, port 4174, one worker |
 | Local production build | **Passed**, TypeScript and Vite; JS, CSS and favicon use the intended base |
-| GitHub Actions | Not run for this repository |
+| GitHub Actions | **Passed** at `acd9268`: 93/93 Vitest, build, 10/10 Chromium and report upload |
 | GitHub Pages and deployed smoke check | Not deployed or verified at the planned address |
 
 The [QA Release Check](docs/QA_RELEASE_CHECK.md) records three core risks, evidence gaps and publication conditions. The screenshot illustrates the existing interface; it is not evidence of a deployment at the planned address.
@@ -133,12 +139,12 @@ The build runs the TypeScript compiler before Vite. Effective strict options wer
 - Fixed demo user and room catalog; no role switch, booking edit/delete or room management.
 - Same-day bookings only. Past dates are permitted; a future-only policy or booking horizon has not been defined.
 - Storage validation checks individual records and booking-ID uniqueness. It does not re-check all stored overlaps, current room membership or timestamp semantics.
-- Vitest covers business logic and mocked storage. Browser automation covers Chromium only; semantic-storage cases, read exceptions and actual storage limits remain gaps.
+- Vitest covers business logic and mocked storage. Browser automation covers Chromium only; semantic-storage coverage is limited to one impossible date, and actual storage limits remain untested.
 - npm ci reported one high-severity dependency finding during local verification. The lockfile still includes the previously flagged source-map-js 1.2.1 development dependency; no fix was applied. The app has no user source-map processing feature.
 
 ## Next steps
 
-Verify CI in the new repository, then publish and check the deployed create → display → refresh flow. Future browser coverage will focus on concrete risks and existing gaps.
+Enable GitHub Pages after owner approval, then verify deployment and the hosted create → display → refresh → persists flow. Future browser coverage will focus on concrete risks and existing gaps.
 
 ### Development approach
 
