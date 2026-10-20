@@ -1,16 +1,16 @@
 # SlotLedger
 
-SlotLedger is a small **room-booking application**. It lets users reserve a room, prevents conflicting bookings and keeps reservations after refreshing the page.
+[![CI](https://github.com/MattZurr/slotledger-qa-automation/actions/workflows/ci-pages.yml/badge.svg?branch=main)](https://github.com/MattZurr/slotledger-qa-automation/actions/workflows/ci-pages.yml)
 
-I am developing it as a **QA Engineer / QA Automation Engineer portfolio project** to demonstrate how I identify risks, investigate defects and build automated tests.
+**Room-booking demo and QA Automation portfolio** built with TypeScript, Vitest, Playwright and GitHub Actions. SlotLedger prevents conflicting reservations and preserves bookings after a page refresh.
 
-**Current status:** public repository with verified CI. All 93 Vitest tests, ten Chromium Playwright tests and the production build passed locally and in [GitHub Actions run 38887009094](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/38887009094) for commit `acd9268` on 2026-10-16. GitHub Pages deployment has not been verified.
+The project demonstrates business-rule validation, browser regression tests, controlled storage-failure scenarios and CI checks before deployment.
 
-Local follow-up on 2026-10-17: all twelve Chromium tests and the production build passed. The two added storage scenarios have not yet been verified in CI.
+**Explore:** [Live demo](https://mattzurr.github.io/slotledger-qa-automation/) · [Browser tests](e2e/booking.spec.ts) · [Validation tests](src/validation/bookingValidator.test.ts) · [Storage tests](src/storage/bookingStorage.test.ts) · [Verified CI run](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) · [QA assessment](docs/QA_RELEASE_CHECK.md)
 
-Repository: [MattZurr/slotledger-qa-automation](https://github.com/MattZurr/slotledger-qa-automation).
-Planned demo: `https://mattzurr.github.io/slotledger-qa-automation/`.
-The demo address is planned and has not been verified as live.
+**Verified CI:** 93/93 Vitest tests, 12/12 Chromium tests and production build passed at commit `23317a8` on 2026-10-20. The run also uploaded the Playwright report and deployed the demo to GitHub Pages.
+
+**Try it:** [Open SlotLedger](https://mattzurr.github.io/slotledger-qa-automation/) — no installation or sign-in required. Creation, persistence after refresh, overlap rejection and adjacent bookings were checked on the hosted site on 2026-10-20.
 
 ## What you can do
 
@@ -22,6 +22,19 @@ The demo address is planned and has not been verified as live.
 The demo uses a sample user, Alice. No sign-in is required. Bookings stay in your browser and are not shared with other people or devices.
 
 ![SlotLedger interface showing a saved Room A booking](docs/screenshots/slotledger-demo.png)
+
+### Try the main flow
+
+1. Create a Room A booking for `09:00–10:00` on any valid date.
+2. Refresh the page: the booking remains visible.
+3. Try Room A on the same date at `09:30–10:30`: the overlap is rejected.
+4. Try `10:00–11:00`: the adjacent booking is accepted.
+
+### Inspect the automated tests
+
+Open the [verified CI run](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) → **Test and build** → **Run Playwright tests** for the scenario results. The [test source](e2e/booking.spec.ts) shows the browser actions and assertions.
+
+For an interactive report, download `playwright-report` from a run's **Artifacts**, extract it, then use `npx playwright show-report "<report-directory>"` from a local checkout with dependencies installed. GitHub requires sign-in to download artifacts; reports expire after seven days. The command expects the folder containing `index.html`, not the file itself.
 
 ## Run locally
 
@@ -73,13 +86,13 @@ On Windows PowerShell, use `npm.cmd` and `npx.cmd` if arguments are not forwarde
 
 The [workflow](.github/workflows/ci-pages.yml) is configured for pushes to main, pull requests and manual runs. It uses Node.js 22 and runs npm ci, Vitest, the production build, Chromium installation and Playwright. E2E uses one worker, rejects test.only and has a five-minute limit. Tests target a local Vite development server, not the production build or hosted website.
 
-The HTML report is configured for upload after success or failure unless the run is cancelled, with seven-day retention. Failed-test traces are retained when produced. After downloading and extracting a report, open it with `npm run test:e2e:report -- <directory>`. Successful upload was verified in run 38887009094; upload after failure remains unexercised.
+The HTML report is configured for upload after success or failure unless the run is cancelled, with seven-day retention. Failed-test traces are retained when produced. Successful upload was verified in run 39402612082; upload after failure remains unexercised in CI.
 
-Tests and build run independently of deployment. Pages artifact upload and deployment require the repository Actions variable `PAGES_ENABLED` to equal `true`, a main push or manual main run, and successful verification. An unset variable leaves deployment disabled. PRs do not deploy. Enable the variable only after publication approval and configuring Pages to use GitHub Actions; GitHub Free requires a public repository for Pages.
+Tests and build run independently of deployment. Pages artifact upload and deployment require the repository Actions variable `PAGES_ENABLED` to equal `true`, a main push or manual main run, and successful verification. An unset variable leaves deployment disabled. PRs do not deploy. This repository uses GitHub Actions as the Pages source.
 
 ## QA approach and evidence
 
-Tests focus on business boundaries and data consistency. The suite exercises both individual validators and their use in booking creation/storage loading. Storage is mocked; timestamp assertions use a controlled clock.
+Tests focus on business boundaries and data consistency. Vitest exercises individual validators and their use in booking creation/storage loading, with mocked storage and a controlled clock for timestamp assertions. Playwright exercises the browser UI and real browser-local storage; read/write exceptions are deliberately simulated.
 
 The application also validates real calendar dates, booking permissions and data loaded from `localStorage`, including identifiers and duplicate booking IDs. Stored bookings use the key `slotledger.bookings`. A failed initial read prevents new bookings; a failed save does not add an unsaved booking to the list.
 
@@ -97,21 +110,17 @@ The twelve [Chromium scenarios](e2e/booking.spec.ts) cover creation and persiste
 
 ### Verification status
 
-Local verification on 2026-10-16 used Windows and Node.js 22.14.0, after npm ci. Playwright used the CI worker/forbid-only/timeout options against the local development server.
+CI evidence: [manually triggered run 39402612082](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) for commit `23317a8`, on 2026-10-20, using Ubuntu and Node.js 22.23.3. Job logs confirm dependency installation, the results below and successful report upload. Pages artifact upload and deployment also succeeded.
 
-On 2026-10-17, all twelve Chromium tests passed on port 4174 with the same runner options, and the production build passed. Vitest was not repeated because application code, unit tests and dependencies were unchanged; its local evidence remains from 2026-10-16.
-
-CI evidence: [push-triggered run 38887009094](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/38887009094) for commit `acd9268`, on 2026-10-16. Job logs confirm npm ci, 93/93 Vitest, the production build, Chromium installation and 10/10 Playwright tests on Ubuntu with Node.js 22.23.3. The `playwright-report` artifact was uploaded successfully. Pages artifact upload and deployment were skipped.
-
-| Check | Evidence for this directory |
+| Check | Verified result |
 | --- | --- |
-| Local Vitest | **93/93 passed**, two files |
-| Local Playwright | **12/12 passed** on 2026-10-17, Chromium, port 4174, one worker |
-| Local production build | **Passed**, TypeScript and Vite; JS, CSS and favicon use the intended base |
-| GitHub Actions | **Passed** at `acd9268`: 93/93 Vitest, build, 10/10 Chromium and report upload |
-| GitHub Pages and deployed smoke check | Not deployed or verified at the planned address |
+| Vitest in CI | **93/93 passed**, validation/creation and storage |
+| Playwright in CI | **12/12 passed**, Chromium, one worker |
+| Production build in CI | **Passed**, TypeScript and Vite |
+| Local verification | **93/93 Vitest** on 2026-10-16; **12/12 Chromium and build** on 2026-10-17, Windows / Node.js 22.14.0 |
+| Hosted demo | **Passed** on 2026-10-20: deployment and separate Chromium smoke check |
 
-The [QA Release Check](docs/QA_RELEASE_CHECK.md) records three core risks, evidence gaps and publication conditions. The screenshot illustrates the existing interface; it is not evidence of a deployment at the planned address.
+The [QA Release Check](docs/QA_RELEASE_CHECK.md) records three core risks and evidence gaps. The maintained E2E suite targets the local Vite development server. A separate smoke check on the hosted demo verified create → display → refresh → persists, overlap rejection and adjacent bookings in an isolated Chromium context. The page, JavaScript, CSS and favicon returned HTTP 200, with no browser console errors or uncaught page errors during this check.
 
 ### Defect example: stored time format
 
@@ -141,10 +150,6 @@ The build runs the TypeScript compiler before Vite. Effective strict options wer
 - Storage validation checks individual records and booking-ID uniqueness. It does not re-check all stored overlaps, current room membership or timestamp semantics.
 - Vitest covers business logic and mocked storage. Browser automation covers Chromium only; semantic-storage coverage is limited to one impossible date, and actual storage limits remain untested.
 - npm ci reported one high-severity dependency finding during local verification. The lockfile still includes the previously flagged source-map-js 1.2.1 development dependency; no fix was applied. The app has no user source-map processing feature.
-
-## Next steps
-
-Enable GitHub Pages after owner approval, then verify deployment and the hosted create → display → refresh → persists flow. Future browser coverage will focus on concrete risks and existing gaps.
 
 ### Development approach
 

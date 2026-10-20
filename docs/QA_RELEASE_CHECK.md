@@ -2,10 +2,9 @@
 
 ## Assessment scope
 
-- Assessment updated: 2026-10-16, for public repository commit `acd9268`.
-- Local coverage follow-up: 2026-10-17, including two additional E2E scenarios awaiting CI verification.
+- Evidence reviewed: 2026-10-20, for public repository commit `23317a8`, its CI/deployment run and a separate hosted smoke check.
 - Intended use: an educational portfolio demo with a fixed booker identity, two rooms and browser-local persistence.
-- The completed risk assessment is retained below. Local verification and CI passed; GitHub Pages deployment remains unverified.
+- Local verification, CI and GitHub Pages deployment passed. The [live demo](https://mattzurr.github.io/slotledger-qa-automation/) was checked in an isolated Chromium context.
 
 ## Risks and existing test coverage
 
@@ -21,30 +20,32 @@ These are high-priority risks to the core flow, not claims of current defects. T
 
 Local execution on 2026-10-16: Windows / Node.js 22.14.0, after npm ci. Chromium used port 4174, one worker, forbid-only and a five-minute global timeout.
 
-Local follow-up on 2026-10-17: 12/12 Chromium tests passed with the same port and runner options; the production build passed. Application code, unit tests and dependencies were unchanged, so Vitest was not repeated. The two added E2E scenarios have no new CI evidence.
+Local verification on 2026-10-17: 12/12 Chromium tests passed with the same port and runner options; the production build passed. Application code, unit tests and dependencies were unchanged, so Vitest was not repeated.
 
-CI execution: [push-triggered run 38887009094](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/38887009094) for commit `acd9268`, on 2026-10-16. Job logs confirm npm ci, 93/93 Vitest, the production build, Chromium installation and 10/10 Playwright tests on Ubuntu with Node.js 22.23.3. The `playwright-report` artifact was uploaded successfully. Pages artifact upload and deployment were skipped.
+CI execution: [manually triggered run 39402612082](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) for commit `23317a8`, on 2026-10-20. Job logs confirm npm ci, 93/93 Vitest, the production build, Chromium installation and 12/12 Playwright tests on Ubuntu with Node.js 22.23.3. The `playwright-report` artifact was uploaded successfully. Pages artifact upload and deployment also succeeded.
 
 | Check | Result for this directory |
 | --- | --- |
 | Local Vitest | **93/93 passed**, two files |
 | Local Playwright | **12/12 passed** on 2026-10-17, Chromium, port 4174, one worker |
 | Local production build | **Passed**, TypeScript and Vite; JS, CSS and favicon use the intended base |
-| GitHub Actions | **Passed** at `acd9268`: 93/93 Vitest, build, 10/10 Chromium and report upload |
-| GitHub Pages and deployed smoke check | Not deployed or verified at the planned address |
+| GitHub Actions | **Passed** at `23317a8`: 93/93 Vitest, build, 12/12 Chromium and report upload |
+| GitHub Pages and deployed smoke check | **Passed** on 2026-10-20: create, reload persistence, overlap rejection and adjacent bookings |
 
-Both local and CI Playwright runs target a Vite development server, not the built or deployed application. Passing CI does not establish deployment, cross-browser or production readiness. Report upload was verified through logs and artifact metadata; the report archive was not downloaded or visually reviewed.
+The maintained local and CI Playwright suite targets a Vite development server. A separate hosted smoke check used an isolated Chromium context to create a booking, verify it after reload, reject an overlap and accept an adjacent booking; both saved bookings survived another reload. The page, JavaScript, CSS and favicon returned HTTP 200. No browser console errors or uncaught page errors were observed. This smoke check does not repeat the full E2E suite against the deployed application.
+
+Report upload was verified through job steps/logs. HTML artifacts expire after seven days; the linked CI run records the execution results. These results do not establish cross-browser or production readiness.
 
 ## Product limitations and remaining gaps
 
 - Fixed demo identity and rooms; no authentication, shared availability, cross-device synchronization, or edit/delete. Browser-local storage is not a durable shared booking service.
 - Same-day bookings only. Storage checks structure/date/time/IDs, but does not re-check stored overlaps or current room membership.
 - Chromium only; storage failure coverage includes malformed JSON, one impossible stored date and simulated read/write exceptions. Actual quota exhaustion and other semantic-data cases remain gaps.
-- Main-push CI and successful report upload are verified. PR execution, report upload after failure and deployment blocking on failure remain unexercised. Pages remains disabled until explicitly enabled after deployment approval.
+- Main-push CI, manual CI/deployment and successful report upload are verified. PR execution, report upload after failure and deployment blocking on failure remain unexercised.
 - npm ci reported one high-severity dependency finding. The unchanged dependency versions include source-map-js 1.2.1, previously flagged in development tooling. The app has no user source-map processing flow; no exploit of the booking flow has been demonstrated and no dependency fix was applied.
 
 ## Conditional release recommendation
 
-The existing **conditional Go for an educational, single-browser demo** remains the product-scope recommendation. Local tests/build, main-push CI and the prepared-content review passed. The code repository is public with owner approval. Hosting remains pending deployment approval and verification. Confirm deployment and a browser smoke check before describing the new demo as live.
+The **conditional Go for an educational, single-browser demo** remains the product-scope recommendation, within the limitations above. Local tests/build, CI, deployment and the hosted smoke check passed. The public repository and live demo are available for portfolio review.
 
 This recommendation does not cover production/shared room booking. Confirmed loss of a saved booking, acceptance of a conflict during creation, or destructive handling of failed reads would mean **No-Go until corrected and reverified**. Reassess the tooling finding before adding untrusted source-map processing.
