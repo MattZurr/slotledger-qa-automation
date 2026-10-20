@@ -6,9 +6,9 @@
 
 The project demonstrates business-rule validation, browser regression tests, controlled storage-failure scenarios and CI checks before deployment.
 
-**Explore:** [Live demo](https://mattzurr.github.io/slotledger-qa-automation/) · [Browser tests](e2e/booking.spec.ts) · [Validation tests](src/validation/bookingValidator.test.ts) · [Storage tests](src/storage/bookingStorage.test.ts) · [Verified CI run](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) · [QA assessment](docs/QA_RELEASE_CHECK.md)
+**Explore:** [Live demo](https://mattzurr.github.io/slotledger-qa-automation/) · [Browser tests](e2e/booking.spec.ts) · [Validation tests](src/validation/bookingValidator.test.ts) · [Storage tests](src/storage/bookingStorage.test.ts) · [Verified CI run](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39424561466) · [QA assessment](docs/QA_RELEASE_CHECK.md)
 
-**Verified CI:** 93/93 Vitest tests, 12/12 Chromium tests and production build passed at commit `23317a8` on 2026-10-20. The run also uploaded the Playwright report and deployed the demo to GitHub Pages.
+**Verified CI:** 93/93 Vitest tests, 12/12 Chromium tests and production build passed at commit `0ad96e8` on 2026-10-20. The run also uploaded the Playwright report and deployed the demo to GitHub Pages.
 
 **Try it:** [Open SlotLedger](https://mattzurr.github.io/slotledger-qa-automation/) — no installation or sign-in required. Creation, persistence after refresh, overlap rejection and adjacent bookings were checked on the hosted site on 2026-10-20.
 
@@ -32,7 +32,7 @@ The demo uses a sample user, Alice. No sign-in is required. Bookings stay in you
 
 ### Inspect the automated tests
 
-Open the [verified CI run](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) → **Test and build** → **Run Playwright tests** for the scenario results. The [test source](e2e/booking.spec.ts) shows the browser actions and assertions.
+Open the [verified CI run](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39424561466) → **Test and build** → **Run Playwright tests** for the scenario results. The [test source](e2e/booking.spec.ts) shows the browser actions and assertions.
 
 For an interactive report, download `playwright-report` from a run's **Artifacts**, extract it, then use `npx playwright show-report "<report-directory>"` from a local checkout with dependencies installed. GitHub requires sign-in to download artifacts; reports expire after seven days. The command expects the folder containing `index.html`, not the file itself.
 
@@ -86,7 +86,7 @@ On Windows PowerShell, use `npm.cmd` and `npx.cmd` if arguments are not forwarde
 
 The [workflow](.github/workflows/ci-pages.yml) is configured for pushes to main, pull requests and manual runs. It uses Node.js 22 and runs npm ci, Vitest, the production build, Chromium installation and Playwright. E2E uses one worker, rejects test.only and has a five-minute limit. Tests target a local Vite development server, not the production build or hosted website.
 
-The HTML report is configured for upload after success or failure unless the run is cancelled, with seven-day retention. Failed-test traces are retained when produced. Successful upload was verified in run 39402612082; upload after failure remains unexercised in CI.
+The HTML report is configured for upload after success or failure unless the run is cancelled, with seven-day retention. Failed-test traces are retained when produced. Successful upload was verified in run 39424561466; upload after failure remains unexercised in CI.
 
 Tests and build run independently of deployment. Pages artifact upload and deployment require the repository Actions variable `PAGES_ENABLED` to equal `true`, a main push or manual main run, and successful verification. An unset variable leaves deployment disabled. PRs do not deploy. This repository uses GitHub Actions as the Pages source.
 
@@ -110,7 +110,7 @@ The twelve [Chromium scenarios](e2e/booking.spec.ts) cover creation and persiste
 
 ### Verification status
 
-CI evidence: [manually triggered run 39402612082](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) for commit `23317a8`, on 2026-10-20, using Ubuntu and Node.js 22.23.3. Job logs confirm dependency installation, the results below and successful report upload. Pages artifact upload and deployment also succeeded.
+CI evidence: [push-triggered run 39424561466](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39424561466) for commit `0ad96e8`, on 2026-10-20, using Ubuntu and Node.js 22.23.3. Job logs confirm dependency installation, the results below and successful report upload. Pages artifact upload and deployment also succeeded.
 
 | Check | Verified result |
 | --- | --- |

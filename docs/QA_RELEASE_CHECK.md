@@ -2,7 +2,7 @@
 
 ## Assessment scope
 
-- Evidence reviewed: 2026-10-20, for public repository commit `23317a8`, its CI/deployment run and a separate hosted smoke check.
+- Evidence reviewed: 2026-10-20, for public repository commit `0ad96e8`, its CI/deployment run and a separate hosted smoke check.
 - Intended use: an educational portfolio demo with a fixed booker identity, two rooms and browser-local persistence.
 - Local verification, CI and GitHub Pages deployment passed. The [live demo](https://mattzurr.github.io/slotledger-qa-automation/) was checked in an isolated Chromium context.
 
@@ -22,14 +22,14 @@ Local execution on 2026-10-16: Windows / Node.js 22.14.0, after npm ci. Chromium
 
 Local verification on 2026-10-17: 12/12 Chromium tests passed with the same port and runner options; the production build passed. Application code, unit tests and dependencies were unchanged, so Vitest was not repeated.
 
-CI execution: [manually triggered run 39402612082](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39402612082) for commit `23317a8`, on 2026-10-20. Job logs confirm npm ci, 93/93 Vitest, the production build, Chromium installation and 12/12 Playwright tests on Ubuntu with Node.js 22.23.3. The `playwright-report` artifact was uploaded successfully. Pages artifact upload and deployment also succeeded.
+CI execution: [push-triggered run 39424561466](https://github.com/MattZurr/slotledger-qa-automation/actions/runs/39424561466) for commit `0ad96e8`, on 2026-10-20. Job logs confirm npm ci, 93/93 Vitest, the production build, Chromium installation and 12/12 Playwright tests on Ubuntu with Node.js 22.23.3. The `playwright-report` artifact was uploaded successfully. Pages artifact upload and deployment also succeeded.
 
 | Check | Result for this directory |
 | --- | --- |
 | Local Vitest | **93/93 passed**, two files |
 | Local Playwright | **12/12 passed** on 2026-10-17, Chromium, port 4174, one worker |
 | Local production build | **Passed**, TypeScript and Vite; JS, CSS and favicon use the intended base |
-| GitHub Actions | **Passed** at `23317a8`: 93/93 Vitest, build, 12/12 Chromium and report upload |
+| GitHub Actions | **Passed** at `0ad96e8`: 93/93 Vitest, build, 12/12 Chromium and report upload |
 | GitHub Pages and deployed smoke check | **Passed** on 2026-10-20: create, reload persistence, overlap rejection and adjacent bookings |
 
 The maintained local and CI Playwright suite targets a Vite development server. A separate hosted smoke check used an isolated Chromium context to create a booking, verify it after reload, reject an overlap and accept an adjacent booking; both saved bookings survived another reload. The page, JavaScript, CSS and favicon returned HTTP 200. No browser console errors or uncaught page errors were observed. This smoke check does not repeat the full E2E suite against the deployed application.
