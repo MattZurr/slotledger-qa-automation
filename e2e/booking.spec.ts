@@ -451,5 +451,120 @@ test("blocks booking creation when date is invalid", async ({ page }) => {
   await expect(booking).toHaveCount(0);
   await expect(page.getByText("No bookings yet")).not.toBeVisible();
 
-  await expect(page.evaluate(() => localStorage.getItem("slotledger.bookings")),).resolves.toBe(invalidData);
+  await expect(
+    page.evaluate(() => localStorage.getItem("slotledger.bookings")),
+  ).resolves.toBe(invalidData);
+});
+
+test("allows retrying a booking after a temporary storage write failure", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const heading = page.getByRole("heading", {
+    name: "Book a room",
+  });
+  await expect(heading).toBeVisible();
+  await page
+    .getByLabel("Room", { exact: true })
+    .selectOption({ label: "Room A" });
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-19");
+  await page.getByLabel("Start time", { exact: true }).fill("09:00");
+  await page.getByLabel("End time", { exact: true }).fill("10:00");
+  await page.getByRole("button", { name: "Create booking" }).click();
+
+  await page.evaluate(() => {
+    const originalSetItem = Storage.prototype.setItem;
+    let shouldFail = true;
+    Storage.prototype.setItem = function (key, value) {
+      if (
+        this === localStorage &&
+        key === "slotledger.bookings" &&
+        shouldFail
+      ) {
+        shouldFail = false;
+        throw new Error("Simulated storage write failure");
+      }
+      originalSetItem.call(this, key, value);
+    };
+  });
+
+  await page
+    .getByLabel("Room", { exact: true })
+    .selectOption({ label: "Room A" });
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-19");
+  await page.getByLabel("Start time", { exact: true }).fill("10:00");
+  await page.getByLabel("End time", { exact: true }).fill("11:00");
+  await page.getByRole("button", { name: "Create booking" }).click();
+
+  const saveError = page
+    .getByRole("status")
+    .getByText(
+      "Booking could not be saved. Your stored data has not been changed.",
+    );
+  await expect(saveError).toBeVisible();
+
+  const booking = page
+    .getByRole("list", { name: "Saved bookings" })
+    .getByRole("listitem");
+
+  await expect(booking).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Create booking" }).click();
+  await expect(saveError).not.toBeVisible();
+  await expect(
+    page.getByRole("status").getByText("Booking created successfully."),
+  ).toBeVisible();
+
+  await expect(booking).toHaveCount(2);
+  await expect(booking).toContainText(["Room A", "Room A"]);
+  await expect(booking).toContainText(["2026-10-19", "2026-10-19"]);
+  await expect(booking).toContainText(["09:00 – 10:00", "10:00 – 11:00"]);
+
+  await page.reload();
+
+  await expect(booking).toHaveCount(2);
+  await expect(booking).toContainText(["Room A", "Room A"]);
+  await expect(booking).toContainText(["2026-10-19", "2026-10-19"]);
+  await expect(booking).toContainText(["09:00 – 10:00", "10:00 – 11:00"]);
+});
+
+test("displays a stored booking for an unknown room", async ({ page }) => {
+  const validBooking = {
+    id: 1,
+    roomId: 99,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "09:00",
+    endTime: "10:00",
+    createdAt: "2026-10-19T09:00:00.000Z",
+  };
+  const validData = JSON.stringify([validBooking]);
+  await page.addInitScript((storedValue) => {
+    localStorage.setItem("slotledger.bookings", storedValue);
+  }, validData);
+
+  await page.goto("./");
+  const booking = page
+    .getByRole("list", { name: "Saved bookings" })
+    .getByRole("listitem");
+
+  await expect(booking).toHaveCount(1);
+  await expect(booking).toContainText(["Room #99"]);
+  await expect(booking).toContainText(["2026-10-19"]);
+  await expect(booking).toContainText(["09:00 – 10:00"]);
+  await expect(page.getByText("No bookings yet")).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create booking" }),
+  ).toBeEnabled();
+
+  await expect(
+    page.evaluate(() => localStorage.getItem("slotledger.bookings")),
+  ).resolves.toBe(validData);
+    await expect(
+    page
+      .getByRole("alert")
+      .getByText(
+        "Bookings could not be loaded. Your stored data has not been changed.",
+      ),
+  ).not.toBeVisible();
 });
