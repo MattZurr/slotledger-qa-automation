@@ -621,3 +621,144 @@ test("blocks booking creation and preserves stored bookings with duplicate IDs",
     page.evaluate(() => localStorage.getItem("slotledger.bookings")),
   ).resolves.toBe(validData);
 });
+
+test("rejects an overlapping booking against a stored booking", async ({
+  page,
+}) => {
+  const validBooking = {
+    id: 7,
+    roomId: 1,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "09:00",
+    endTime: "10:00",
+    createdAt: "2026-10-19T09:00:00.000Z",
+  };
+  const validData = JSON.stringify([validBooking]);
+  await page.addInitScript((storedValue) => {
+    localStorage.setItem("slotledger.bookings", storedValue);
+  }, validData);
+
+  await page.goto("./");
+
+  const heading = page.getByRole("heading", {
+    name: "Book a room",
+  });
+  await expect(heading).toBeVisible();
+
+  const booking = page
+    .getByRole("list", { name: "Saved bookings" })
+    .getByRole("listitem");
+  await expect(booking).toHaveCount(1);
+  await expect(booking).toContainText(["Room A"]);
+  await expect(booking).toContainText(["2026-10-19"]);
+  await expect(booking).toContainText(["09:00 – 10:00"]);
+
+  await page
+    .getByLabel("Room", { exact: true })
+    .selectOption({ label: "Room A" });
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-19");
+  await page.getByLabel("Start time", { exact: true }).fill("09:30");
+  await page.getByLabel("End time", { exact: true }).fill("10:30");
+  await page.getByRole("button", { name: "Create booking" }).click();
+
+  const errorOverlapMessage = page.getByText(
+    "This room is already booked for the selected time.",
+  );
+  await expect(errorOverlapMessage).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create booking" }),
+  ).toBeEnabled();
+
+  await expect(booking).toHaveCount(1);
+  await expect(booking).toContainText(["Room A"]);
+  await expect(booking).toContainText(["2026-10-19"]);
+  await expect(booking).toContainText(["09:00 – 10:00"]);
+  await expect(
+    page.evaluate(() => localStorage.getItem("slotledger.bookings")),
+  ).resolves.toBe(validData);
+});
+
+test("creates a booking with the next highest ID after loading stored bookings", async ({
+  page,
+}) => {
+  const validBooking1 = {
+    id: 7,
+    roomId: 1,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "09:00",
+    endTime: "10:00",
+    createdAt: "2026-10-19T09:00:00.000Z",
+  };
+  const validBooking2 = {
+    id: 3,
+    roomId: 1,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "10:00",
+    endTime: "11:00",
+    createdAt: "2026-10-19T09:00:00.000Z",
+  };
+  const validData = JSON.stringify([validBooking1, validBooking2]);
+  await page.addInitScript((storedValue) => {
+    localStorage.setItem("slotledger.bookings", storedValue);
+  }, validData);
+
+  await page.goto("./");
+
+  const heading = page.getByRole("heading", {
+    name: "Book a room",
+  });
+  await expect(heading).toBeVisible();
+  const booking = page
+    .getByRole("list", { name: "Saved bookings" })
+    .getByRole("listitem");
+  await expect(booking).toHaveCount(2);
+  await expect(booking).toContainText(["Room A", "Room A"]);
+  await expect(booking).toContainText(["2026-10-19", "2026-10-19"]);
+  await expect(booking).toContainText(["09:00 – 10:00", "10:00 – 11:00"]);
+
+  await page
+    .getByLabel("Room", { exact: true })
+    .selectOption({ label: "Room A" });
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-19");
+  await page.getByLabel("Start time", { exact: true }).fill("11:00");
+  await page.getByLabel("End time", { exact: true }).fill("12:00");
+  await page.getByRole("button", { name: "Create booking" }).click();
+
+  const successMessage = page.getByText("Booking created successfully.");
+  await expect(successMessage).toBeVisible();
+  await expect(booking).toHaveCount(3);
+  await expect(booking).toContainText(["Room A", "Room A", "Room A"]);
+  await expect(booking).toContainText([
+    "2026-10-19",
+    "2026-10-19",
+    "2026-10-19",
+  ]);
+  await expect(booking).toContainText([
+    "09:00 – 10:00",
+    "10:00 – 11:00",
+    "11:00 – 12:00",
+  ]);
+
+  const storedData = await page.evaluate(() =>
+    localStorage.getItem("slotledger.bookings"),
+  );
+  if (storedData === null) {
+    throw new Error("Expected saved bookings in localStorage");
+  }
+
+  const validBookingData = JSON.parse(storedData);
+  await expect(validBookingData).toHaveLength(3);
+  await expect(validBookingData[0]).toEqual(validBooking1);
+  await expect(validBookingData[1]).toEqual(validBooking2);
+  await expect(validBookingData[2]).toMatchObject({
+    id: 8,
+    roomId: 1,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "11:00",
+    endTime: "12:00",
+  });
+});
