@@ -560,11 +560,64 @@ test("displays a stored booking for an unknown room", async ({ page }) => {
   await expect(
     page.evaluate(() => localStorage.getItem("slotledger.bookings")),
   ).resolves.toBe(validData);
-    await expect(
+  await expect(
     page
       .getByRole("alert")
       .getByText(
         "Bookings could not be loaded. Your stored data has not been changed.",
       ),
   ).not.toBeVisible();
+});
+
+test("blocks booking creation and preserves stored bookings with duplicate IDs", async ({
+  page,
+}) => {
+  const validBooking1 = {
+    id: 1,
+    roomId: 1,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "09:00",
+    endTime: "10:00",
+    createdAt: "2026-10-19T09:00:00.000Z",
+  };
+  const validBooking2 = {
+    id: 1,
+    roomId: 1,
+    userId: 1,
+    date: "2026-10-19",
+    startTime: "10:00",
+    endTime: "11:00",
+    createdAt: "2026-10-19T09:00:00.000Z",
+  };
+  const validData = JSON.stringify([validBooking1, validBooking2]);
+  await page.addInitScript((storedValue) => {
+    localStorage.setItem("slotledger.bookings", storedValue);
+  }, validData);
+
+  await page.goto("./");
+
+  const heading = page.getByRole("heading", {
+    name: "Book a room",
+  });
+  await expect(heading).toBeVisible();
+
+  await expect(
+    page
+      .getByRole("alert")
+      .getByText(
+        "Bookings could not be loaded. Your stored data has not been changed.",
+      ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create booking" }),
+  ).toBeDisabled();
+  const booking = page
+    .getByRole("list", { name: "Saved bookings" })
+    .getByRole("listitem");
+  await expect(booking).toHaveCount(0);
+  await expect(page.getByText("No bookings yet")).not.toBeVisible();
+  await expect(
+    page.evaluate(() => localStorage.getItem("slotledger.bookings")),
+  ).resolves.toBe(validData);
 });
